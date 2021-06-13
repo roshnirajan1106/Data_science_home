@@ -1,39 +1,40 @@
 library(ggplot2)
 library(corrplot)
-library("ggpubr")
 ptse=read.csv(file.choose())
 ptse1=ptse
 #data visualization
 print(colSums(is.na(ptse)))
-visualization1=function(country){
-  data_for_visualization=ptse[ptse$Country==country,3:5]
-  data_for_visualization$Series=paste(data_for_visualization$Series,data_for_visualization$Year)
-  data_for_visualization=data_for_visualization[,2:3]
-  ggplot(data_for_visualization, aes(x = Series, y = Value)) +
-    geom_col() + 
-    coord_flip()+
-    labs(title=country)
-}
+#bargraph
+# visualization1=function(country){
+#   data_for_visualization=ptse[ptse$Country==country,3:5]
+#   data_for_visualization$Series=paste(data_for_visualization$Series,data_for_visualization$Year)
+#   data_for_visualization=data_for_visualization[,2:3]
+#   ggplot(data_for_visualization, aes(x = Series, y = Value)) +
+#     geom_col() + 
+#     coord_flip()+
+#     labs(title=country)
+# }
 colnames(ptse)
+#
 visualization2=function(country){
   
-  ggplot(ptse[ptse$Country==country,3:5], aes(Series, Value)) + geom_boxplot(fill = "red")+
-    scale_y_continuous("petajoules", breaks= seq(0,581665, by=116333))+
-    labs(title = "Box Plot", x = "Value")
+  ggplot(ptse[ptse$Country==country,3:5], aes(Series, Value)) +geom_point()+ geom_boxplot(fill = "red")+
+    scale_y_continuous("petajoules", breaks= seq(0,581665, by=116333))+labs(title =country, x = "Value")
   
 }
 
 visualization2('Total, all countries or areas')
 visualization3=function(country){
   data_for_visualization=ptse[ptse$Country==country,3:5]
-  ggplot(data = data_for_visualization , aes(x = Year, y = Value)) + geom_point(aes(colour=factor(Year)))
+  ggplot(data = data_for_visualization , aes(x = Year, y = Value)) +labs(title =country)+ geom_point(aes(colour=factor(Series)))
 }
-visualization1('Africa')
-visualization1('Total, all countries or areas')
-visualization1('Asia')
+# visualization1('Africa')
+# visualization1('Total, all countries or areas')
+# visualization1('Asia')
 
-visualization3('India')
-visualization2('Asia')
+print(visualization3('India'))
+print(visualization2('Asia'))
+print(visualization3('Russian Federation'))
 head(ptse)
 data_clean<-function(country)
 {
@@ -101,11 +102,14 @@ data_clean<-function(country)
   )
   return(a)
 }
-x=data_clean('India')
-x
-correlations <- cor(x[sapply(x, is.numeric)], use='pairwise')
-corrplot(correlations,method = "circle", tl.cex = 0.55, tl.col = 'black', order = "hclust", addrect = 5)
+x=data_clean('Russian Federation')
+print(x)
+#corrplot for country specific
+correlations <- cor(x[sapply(x, is.numeric)])
+corrplot(correlations,method = "circle", tl.cex = 0.55, tl.col = 'black', order = "hclust", addrect =6)
 print(correlations)
+
+#pca
 var=apply(subset(x,select=-c(Country)),2,var)
 scaled_x=apply(subset(x,select=-c(Country)),2,scale)
 # x.cov=cov(scaled_x)
@@ -120,30 +124,31 @@ scaled_x=apply(subset(x,select=-c(Country)),2,scale)
 # PC
 scaled_x
 pca=prcomp(scaled_x)
-pca$rotation=-pca$rotation
-pca$x=-pca$x
 variance_explained=pca$sdev^2
 principle_ve=variance_explained/sum(variance_explained)
 print(round(principle_ve,2))
 
+
 #prediction
-x
+prediction=function(country){
+x=data_clean(country)
+x[is.na(x)]=0
 multiple_lm=lm(supply_per_capita~net_imports+Primary_energy,data=x)
-library(DAAG)
 summary(multiple_lm)
 x1=subset(x,select=-c(total_supply))
-x1
-correlations <- cor(x1[sapply(x1, is.numeric)], use='pairwise')
-corrplot(correlations,method = "circle", tl.cex = 0.55, tl.col = 'black', order = "hclust", addrect = 5)
-x_train=subset(x[1:6,],select=-c(Country))
-x_test=subset(x[7:8,],select=-c(Country,supply_per_capita))
-y_test=x1[7:8,6]
-x_train
+x_train=subset(x[1:(length(x1)-2),],select=-c(Country))
+x_test=subset(x[(length(x)-1):length(x),],select=-c(Country,supply_per_capita))
+y_test=x1[(length(x)-1):length(x),6]
 multiple_lm=lm(supply_per_capita~Primary_energy+net_imports,data=x_train)
 predicted=predict(multiple_lm,x_test)
-print(predicted)
-print(y_test)
 summary(multiple_lm)
+# resid(multiple_lm)
+# print(plot(x_train, resid(multiple_lm),main="Supply per capita") )
+cat("\npredicted values are:",predicted)
+cat("\nactual values are:",y_test)
+}
+print(prediction('India'))
+print(prediction('Russian Federation'))
 Primary_energy=c()
 net_imports=c()
 changes_in_stocks=c()
@@ -152,7 +157,6 @@ supply_per_capita=c()
 region=c()
 count=0
 data=ptse[ptse$Country=='India',]
-mean(data[data$Series=='Changes in stocks (petajoules)',]$Value)
 for(country in unique(ptse$Country)){
   data=ptse[ptse$Country==country,]
   mean_primary=mean(data[data$Series=='Primary energy production (petajoules)',]$Value)
@@ -208,24 +212,34 @@ new_data=data.frame(
   total_supply,
   supply_per_capita
 )
+# corrplot of all data
+correlations <- cor(new_data[sapply(new_data, is.numeric)], use='pairwise')
+corrplot(correlations,method = "circle", tl.cex = 0.55, tl.col = 'black', order = "hclust", addrect = 5)
+
+# t=(x1-x2)/sqrt((sd(hypo_data$Primary_energy)^2+sd(hypo_data$total_supply)^2)/50)
+# t
+
+#hypothesis testing (no correlation btw supply per capita and changes in stocks)
 set.seed(123)
 data=new_data
 data<-data[order(runif(1792)),]
 data[is.na(data)] <- 0
 hypo_data=data[1:1792,]
-x1=mean(hypo_data$Primary_energy)
-x2=mean(hypo_data$total_supply)
-t=(x1-x2)/sqrt((sd(hypo_data$Primary_energy)^2+sd(hypo_data$total_supply)^2)/50)
-t
-#hypothesis testing
 hypo=lm(supply_per_capita~changes_in_stocks,hypo_data)
-summary(hypo)$coefficients[[8]]
+pvalue=summary(hypo)$coefficients[[8]]
 x_train=subset(data[1:1440,],select=-c(total_supply))
 x_test=subset(data[1400:1792,],select=-c(total_supply,supply_per_capita))
 y_test=data$supply_per_capita[1440:1792]
+cat("\nP-value is ",pvalue)
+if(pvalue>0.05){
+  cat("\nFailed to reject null hypothesis for alpha 0.05")
+}else {
+  cat("\nNull hypothesis rejected for alpha 0.05")
+}
 # new_data1=subset(new_data,select=-c(changes_in_stocks,total_supply))
 # new_data1$region=as.factor(new_data1$region)
-multiple_lm=lm(supply_per_capita~total_supply+net_imports,data)
+multiple_lm=lm(supply_per_capita~total_supply+net_imports+region,new_data)
+ggplot(new_data, aes(x=net_imports, y=supply_per_capita)) +geom_point(size=2, shape=23)
+ggplot(new_data, aes(x=total_supply, y=supply_per_capita)) +geom_point(size=2, shape=23)
+ggplot(new_data, aes(x=total_supply, y=Primary_energy)) +geom_point(size=2, shape=23)
 summary(multiple_lm)
-correlations <- cor(data[sapply(data, is.numeric)], use='pairwise')
-corrplot(correlations,method = "circle", tl.cex = 0.55, tl.col = 'black', order = "hclust", addrect = 5)
