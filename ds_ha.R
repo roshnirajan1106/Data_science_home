@@ -5,6 +5,18 @@ ptse1=ptse
 #data visualization
 print(colSums(is.na(ptse)))
 #bargraph
+<<<<<<< HEAD
+visualization1=function(country){
+  data_for_visualization=ptse[ptse$Country==country,3:5]
+  data_for_visualization$Series=paste(data_for_visualization$Series,data_for_visualization$Year)
+  data_for_visualization=data_for_visualization[,2:3]
+  ggplot(data_for_visualization, aes(x = Series, y = Value)) +
+    geom_col() +
+    coord_flip()+
+    labs(title=country)
+}
+visualization1("India")
+=======
 # visualization1=function(country){
 #   data_for_visualization=ptse[ptse$Country==country,3:5]
 #   data_for_visualization$Series=paste(data_for_visualization$Series,data_for_visualization$Year)
@@ -14,6 +26,7 @@ print(colSums(is.na(ptse)))
 #     coord_flip()+
 #     labs(title=country)
 # }
+>>>>>>> c82446f67dbbe37f7f92c25e79f77e84c225e745
 colnames(ptse)
 #
 visualization2=function(country){
@@ -31,10 +44,17 @@ visualization3=function(country){
 # visualization1('Africa')
 # visualization1('Total, all countries or areas')
 # visualization1('Asia')
+<<<<<<< HEAD
+print(visualization3('India'))
+print(visualization2('Africa'))
+print(visualization3('Russian Federation'))
+print(visualization3('Japan'))
+=======
 
 print(visualization3('India'))
 print(visualization2('Asia'))
 print(visualization3('Russian Federation'))
+>>>>>>> c82446f67dbbe37f7f92c25e79f77e84c225e745
 head(ptse)
 data_clean<-function(country)
 {
@@ -102,11 +122,40 @@ data_clean<-function(country)
   )
   return(a)
 }
+<<<<<<< HEAD
+degree_of_correlation=function(x,y){
+  correlation=cor(x,y,use='pairwise',method ="pearson")
+  if(correlation>=0.5 || correlation<=-0.5){
+    cat("High degree of correlation with coefficient of",correlation,"\n")
+  }else if((correlation<0.5 && correlation>=0.3)||(correlation>-0.5 && correlation<=-0.3)){
+    cat("Moderate degree of correlation with coefficient of",correlation,"\n")
+  }else{
+    cat("Low degree of correlation with coefficient of",correlation,"\n")
+  }
+}
+x=data_clean('Russian Federation')
+print(x)
+#corrplot for country specific
+x=subset(x,select=-c(changes_in_stocks,years))
+correlations <- cor(x[sapply(x, is.numeric)])
+print("Correlation between supply per capita and primary energy")
+degree_of_correlation(x$supply_per_capita,x$Primary_energy)
+print("Correlation between total supply and primary energy")
+degree_of_correlation(x$total_supply,x$Primary_energy)
+print("Correlation between supply per capita and net imports")
+degree_of_correlation(x$supply_per_capita,x$net_imports)
+print("Correlation between primary energy production and net imports")
+degree_of_correlation(x$Primary_energy,x$net_imports)
+print("Correlation between total supply and net imports")
+degree_of_correlation(x$total_supply,x$net_imports)
+corrplot(correlations,method = "circle", tl.cex = 0.55, tl.col = 'black', order = "hclust", addrect =4)
+=======
 x=data_clean('Russian Federation')
 print(x)
 #corrplot for country specific
 correlations <- cor(x[sapply(x, is.numeric)])
 corrplot(correlations,method = "circle", tl.cex = 0.55, tl.col = 'black', order = "hclust", addrect =6)
+>>>>>>> c82446f67dbbe37f7f92c25e79f77e84c225e745
 print(correlations)
 
 #pca
@@ -134,7 +183,11 @@ prediction=function(country){
 x=data_clean(country)
 x[is.na(x)]=0
 multiple_lm=lm(supply_per_capita~net_imports+Primary_energy,data=x)
+<<<<<<< HEAD
+print(summary(multiple_lm))
+=======
 summary(multiple_lm)
+>>>>>>> c82446f67dbbe37f7f92c25e79f77e84c225e745
 x1=subset(x,select=-c(total_supply))
 x_train=subset(x[1:(length(x1)-2),],select=-c(Country))
 x_test=subset(x[(length(x)-1):length(x),],select=-c(Country,supply_per_capita))
@@ -146,9 +199,17 @@ summary(multiple_lm)
 # print(plot(x_train, resid(multiple_lm),main="Supply per capita") )
 cat("\npredicted values are:",predicted)
 cat("\nactual values are:",y_test)
+<<<<<<< HEAD
+cat("\n")
+}
+prediction('India')
+prediction('Russian Federation')
+prediction('Mongolia')
+=======
 }
 print(prediction('India'))
 print(prediction('Russian Federation'))
+>>>>>>> c82446f67dbbe37f7f92c25e79f77e84c225e745
 Primary_energy=c()
 net_imports=c()
 changes_in_stocks=c()
@@ -215,7 +276,11 @@ new_data=data.frame(
 # corrplot of all data
 correlations <- cor(new_data[sapply(new_data, is.numeric)], use='pairwise')
 corrplot(correlations,method = "circle", tl.cex = 0.55, tl.col = 'black', order = "hclust", addrect = 5)
+<<<<<<< HEAD
+cor(new)
+=======
 
+>>>>>>> c82446f67dbbe37f7f92c25e79f77e84c225e745
 # t=(x1-x2)/sqrt((sd(hypo_data$Primary_energy)^2+sd(hypo_data$total_supply)^2)/50)
 # t
 
@@ -234,6 +299,20 @@ cat("\nP-value is ",pvalue)
 if(pvalue>0.05){
   cat("\nFailed to reject null hypothesis for alpha 0.05")
 }else {
+<<<<<<< HEAD
+  cat("\nNull hypothesis rejected for alpha 0.05\n")
+}
+# new_data1=subset(new_data,select=-c(changes_in_stocks,total_supply))
+# new_data1$region=as.factor(new_data1$region)
+multiple_lm1=lm(total_supply~Primary_energy,new_data)
+summary(multiple_lm1)
+plot=ggplot(new_data,aes(y=total_supply,x=Primary_energy))+geom_point()+geom_smooth(method="lm",formula=y~x,se=F,col='blue')+ggtitle('SLR')
+print(plot)
+multiple_lm=lm(supply_per_capita~Primary_energy+net_imports+region,new_data)
+ggplot(new_data, aes(y=net_imports, x=supply_per_capita)) +geom_point(size=2, shape=23)
+ggplot(new_data, aes(y=total_supply, x=supply_per_capita)) +geom_point(size=2, shape=23)
+ggplot(new_data, aes(y=total_supply, x=Primary_energy)) +geom_point(size=2, shape=23)
+=======
   cat("\nNull hypothesis rejected for alpha 0.05")
 }
 # new_data1=subset(new_data,select=-c(changes_in_stocks,total_supply))
@@ -242,4 +321,5 @@ multiple_lm=lm(supply_per_capita~total_supply+net_imports+region,new_data)
 ggplot(new_data, aes(x=net_imports, y=supply_per_capita)) +geom_point(size=2, shape=23)
 ggplot(new_data, aes(x=total_supply, y=supply_per_capita)) +geom_point(size=2, shape=23)
 ggplot(new_data, aes(x=total_supply, y=Primary_energy)) +geom_point(size=2, shape=23)
+>>>>>>> c82446f67dbbe37f7f92c25e79f77e84c225e745
 summary(multiple_lm)
